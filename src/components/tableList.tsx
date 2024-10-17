@@ -22,9 +22,11 @@ type TableData = {
 
 type TableListProps = {
     user: UserType;
+    updateUser: Function;
 };
 
-function TableList({ user }: TableListProps) {
+function TableList({ user, updateUser }: TableListProps) {
+    const [userProps, setUserProps] = useState(user);
     const [tables, setTables] = useState<TableData[]>([]);
     const [filteredTables, setFilteredTables] = useState<TableData[]>([]);
     const [visible, setVisible] = useState(false); // For dialog visibility
@@ -50,7 +52,7 @@ function TableList({ user }: TableListProps) {
                             console.log(data.length);
                             data = data.filter(
                                 (table: TableData) =>
-                                    table.seats_number - parseInt(table.totalSeatsBooked) >= user.seats_remaining
+                                    table.seats_number - parseInt(table.totalSeatsBooked) >= userProps.seats_remaining
                             );
                             console.log(data);
                             setTables(data);
@@ -84,12 +86,12 @@ function TableList({ user }: TableListProps) {
     };
 
     const handleBook = async () => {
-        if(user.seats_remaining > 0){
+        if(userProps.seats_remaining > 0){
             if (selectedTable === null) return;
 
             const body = {
                 table_id: selectedTable.id,
-                person_id: user.id,
+                person_id: userProps.id,
             };
     
             try {
@@ -101,8 +103,18 @@ function TableList({ user }: TableListProps) {
                     body: JSON.stringify(body),
                 });
                 if (res.ok) {
-                    user.seats_remaining = 0; // Reset seat availability
-                    sessionStorage.setItem("user", JSON.stringify(user));
+                    const updatedUser = { 
+                        ...userProps, 
+                        seats_remaining: 0 
+                    };
+    
+                    // Mettre à jour l'utilisateur dans l'enfant
+                    setUserProps(updatedUser);
+    
+                    // Mettre à jour l'utilisateur dans le parent via updateUser
+                    updateUser(updatedUser);
+                    
+                    sessionStorage.setItem("user", JSON.stringify(updatedUser));
                     setVisible(false)
                 }
             } catch (error) {
@@ -149,7 +161,7 @@ function TableList({ user }: TableListProps) {
 
         <div>
             <p className="mb-4 text-lg">
-                Nombre de place à réserver : {user.seats_remaining}
+                Nombre de place à réserver : {userProps.seats_remaining}
             </p>
             <form className="space-y-4">
                 <div className="flex space-x-4">

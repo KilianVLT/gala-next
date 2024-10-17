@@ -18,10 +18,26 @@ type Logs = {
   pswd: string;
 };
 
+type BookingType = {
+  id: number;
+  person_id: number;
+  seats_booked: number;
+  table: {
+    number: number;
+    name: string;
+  };
+  table_id: number;
+}
+
 export default function Home() {
   const [showMenu, setShowMenu] = useState<boolean>(false);
   const [logs, setLogs] = useState<Logs>({ id: "", pswd: "" });
   const [user, setUser] = useState<User | null>(null);
+  const [booking, setBooking] = useState<BookingType | null>(null);
+
+  const updateUser = (newValue: User) => {
+    setUser(newValue);
+  };
 
   useEffect(() => {
     // Accéder à sessionStorage uniquement côté client
@@ -33,6 +49,7 @@ export default function Home() {
         setShowMenu(true);
       }
     }
+
   }, []);
 
   const HandleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -77,14 +94,36 @@ export default function Home() {
           seats_remaining: data.seats_remaining,
           role: data.role,
         };
+
+        if (data && data.seats_remaining <= 0) {
+          fetch("http://localhost:3001/booking/by-person/" + data.id, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json"
+            }
+          })
+            .then(res => res.json())
+            .then((res: BookingType[]) => {
+              setBooking(res[0]);
+            })
+        }
+
         sessionStorage.setItem("user", JSON.stringify(newUser));
         setUser(newUser);
         setShowMenu(true);
+        
       }
     } catch (err) {
       console.error("error:", err);
     }
   };
+
+  function Recap() {
+    if (booking) {
+      return (<p className="text-center">Vous avez réservé <b>{booking.seats_booked} place(s)</b>  pour la table numéro <b>{booking.table.number} : {booking.table.name}</b></p>)
+    }
+    return (<></>)
+  }
 
   return (
     <div className="w-full h-full lg:grid lg:min-h-screen lg:grid-cols-2">
@@ -137,9 +176,9 @@ export default function Home() {
             ) : showMenu && user?.role === "USER" ? (
               user.seats_remaining > 0 ?
                 (
-                  <TableList user={user} />
+                  <TableList user={user} updateUser={updateUser}/>
                 ) : (
-                  <></>
+                  <Recap />
                 )
             ) : (
               <div className="grid gap-4">

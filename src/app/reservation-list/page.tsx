@@ -2,15 +2,23 @@
 import { useState, useEffect, ChangeEvent } from "react";
 import { Input } from "@/components/ui/input"; // Shadcn UI component
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; // Shadcn Table
+import { DropdownMenu, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuContent } from '@/components/ui/dropdown-menu';
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+
+
 import Image from "next/image";
 
 // Typing for reservations
 type Reservation = {
-  id: string;
+  id: number;
   person: {
+    id: number;
     last_name: string;
+    role: string;
   };
   table: {
+    id: number;
     name: string;
     number: number;
   };
@@ -20,6 +28,10 @@ type Reservation = {
 export default function ReservationList() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [reservationCopy, setReservationCopy] = useState<Reservation[]>([]);
+  const [visible, setVisible] = useState(false);
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+
+
 
   useEffect(() => {
     const fetchReservations = async () => {
@@ -60,6 +72,31 @@ export default function ReservationList() {
       setReservationCopy(reservations);
     }
   };
+
+  const Delete = async () => {
+    console.log(selectedReservation);
+    
+    if(selectedReservation){
+      try {
+        await fetch(`http://localhost:3001/booking/delete/${selectedReservation.person.id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        setReservationCopy(reservationCopy.filter((booking) => booking.person.id !== selectedReservation.person.id));
+        setVisible(false)
+      } catch (err) {
+        console.error('Error deleting table:', err);
+      }
+    }
+    
+  };
+
+  const selectReservation = (res: Reservation) => {
+    setSelectedReservation(res);
+    setVisible(true);
+};
 
   return (
     <div className="min-h-screen bg-[#ebebeb] dark:bg-hsl(230,50%,5%) p-8">
@@ -107,22 +144,50 @@ export default function ReservationList() {
           </TableHeader>
           <TableBody>
             {reservationCopy.map((res) => (
-              <TableRow key={res.id} className="hover:bg-gray-100 dark:hover:bg-hsl(230,50%,10%)">
-                <TableCell className="text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">{res.person.last_name}</TableCell>
+              <TableRow key={res.id} className={res.seats_booked < 10 ? "hover:bg-gray-100 dark:hover:bg-hsl(230,50%,10%)" : "bg-gray-300 hover:bg-gray-300"}>
+                <TableCell className="text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">{res.person.role == "ADMIN" ? "ADMIN" : res.person.last_name}</TableCell>
                 <TableCell className="text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">
                   {res.table.number} - {res.table.name}
                 </TableCell>
                 <TableCell className="text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">{res.seats_booked}</TableCell>
                 <TableCell>
-                  <span className="material-symbols-outlined text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">
-                    more_horiz
-                  </span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <span className="material-symbols-outlined text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">more_horiz</span>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56">
+                      <DropdownMenuItem onClick={() => selectReservation(res)}>
+                        <span>Supprimer</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <span>Modifier</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={visible} onOpenChange={setVisible}>
+        <DialogContent className="bg-[#ebebeb]">
+          <DialogHeader>
+            <DialogTitle>Confirmer la suppression</DialogTitle>
+          </DialogHeader>
+          <p>
+            Voulez-vous vraiment supprimer cette réservation ?
+          </p>
+          <DialogFooter>
+            <Button onClick={Delete}>Confirmer</Button>
+            <Button variant="outline" onClick={() => setVisible(false)}>
+              Annuler
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

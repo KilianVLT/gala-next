@@ -72,6 +72,38 @@ export default function TableList() {
         }
     };
 
+    const Disable = async (table: TableType) => {
+        if(sessionStorage.getItem("user") && JSON.parse(sessionStorage.getItem("user") as string).id ){
+            try {
+                let body = {
+                    person_id: JSON.parse(sessionStorage.getItem("user") as string).id,
+                    table_id: table.id
+                }
+                await fetch(`http://localhost:3001/booking/new/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body)
+                })
+                .then(res=>res.json())
+                .then(()=>{
+                    let tables = tablesCopy.map((res)=>{
+                        if(res.id == table.id){
+                            res.totalSeatsBooked = "10"
+                        }
+                        return res
+                    })
+                    setTablesCopy(tables)
+                })
+                
+            } catch (err) {
+                console.error('Error table:', err);
+            }
+        }
+        
+    };
+
     const HandleSubmit = async () => {
 
         let res = await fetch("http://localhost:3001/table/new", {
@@ -118,7 +150,7 @@ export default function TableList() {
             </TableHeader>
             <TableBody>
                 {tablesCopy.map((res) => (
-                    <TableRow key={res.id} className="hover:bg-gray-100 dark:hover:bg-hsl(230,50%,10%)">
+                    <TableRow key={res.id} className={parseInt(res.totalSeatsBooked) < 10 ? "hover:bg-gray-100 dark:hover:bg-hsl(230,50%,10%)" : "bg-gray-300 hover:bg-gray-300"}>
                         <TableCell className="font-medium text-hsl(230,50%,5%) dark:text-[#ebebeb]">{res.number}</TableCell>
                         <TableCell className="text-hsl(230,50%,5%) dark:text-[#ebebeb]">{res.name}</TableCell>
                         <TableCell className="text-hsl(230,50%,5%) dark:text-[#ebebeb]">{res.totalSeatsBooked}</TableCell>
@@ -134,7 +166,7 @@ export default function TableList() {
                                     <DropdownMenuItem>
                                         <span>Voir le détail</span>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem>
+                                    <DropdownMenuItem onClick={()=>{Disable(res)}}>
                                         <span>Rendre indisponible</span>
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
