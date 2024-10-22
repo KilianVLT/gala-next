@@ -18,15 +18,29 @@ type TableType = {
     seats_number: number;
 };
 
+type PersonType = {
+    first_name: string;
+    last_name: string;
+}
+
 type TableFormType = {
     number: string,
     name: string
+}
+
+type BookingType = {
+    id: number;
+    person: PersonType;
 }
 
 export default function TableList() {
     const [tablesCopy, setTablesCopy] = useState<TableType[]>([]);
     const [addTable, setShowAddTable] = useState(false);
     const [table, setTable] = useState<TableFormType>({ number: "", name: "" });
+    const [bookings, setBookings] = useState<BookingType[] | null>(null);
+    const [visible, setVisible] = useState<boolean>(false);
+    const [idTable, setIdTable] = useState<string>("");
+
 
     // Fetching tables on component mount
     useEffect(() => {
@@ -58,22 +72,42 @@ export default function TableList() {
         });
     };
 
-    const Delete = async (id: string) => {
+    const checkBookings = async (id: string) => {
+        setIdTable(id);
         try {
-            await fetch(`http://localhost:3001/table/delete/${id}`, {
+            await fetch(`http://localhost:3001/booking/by-table/${id}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": 'application/json'
+                }
+            })
+                .then(res => res.json())
+                .then(res => {
+                    setBookings(res)
+                    setVisible(true);
+                })
+        }
+        catch (err) {
+            console.error('Error getting table:', err);
+        }
+    }
+
+    const Delete = async () => {
+        try {
+            await fetch(`http://localhost:3001/table/delete/${idTable}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                 },
             });
-            setTablesCopy(tablesCopy.filter((table) => table.id !== id));
+            setTablesCopy(tablesCopy.filter((table) => table.id !== idTable));
         } catch (err) {
             console.error('Error deleting table:', err);
         }
     };
 
     const Disable = async (table: TableType) => {
-        if(sessionStorage.getItem("user") && JSON.parse(sessionStorage.getItem("user") as string).id ){
+        if (sessionStorage.getItem("user") && JSON.parse(sessionStorage.getItem("user") as string).id) {
             try {
                 let body = {
                     person_id: JSON.parse(sessionStorage.getItem("user") as string).id,
@@ -86,22 +120,22 @@ export default function TableList() {
                     },
                     body: JSON.stringify(body)
                 })
-                .then(res=>res.json())
-                .then(()=>{
-                    let tables = tablesCopy.map((res)=>{
-                        if(res.id == table.id){
-                            res.totalSeatsBooked = "10"
-                        }
-                        return res
+                    .then(res => res.json())
+                    .then(() => {
+                        let tables = tablesCopy.map((res) => {
+                            if (res.id == table.id) {
+                                res.totalSeatsBooked = "10"
+                            }
+                            return res
+                        })
+                        setTablesCopy(tables)
                     })
-                    setTablesCopy(tables)
-                })
-                
+
             } catch (err) {
                 console.error('Error table:', err);
             }
         }
-        
+
     };
 
     const HandleSubmit = async () => {
@@ -160,13 +194,13 @@ export default function TableList() {
                                     <span className="material-symbols-outlined text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">more_horiz</span>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className="w-56">
-                                    <DropdownMenuItem onClick={()=>Delete(res.id)}>
+                                    <DropdownMenuItem onClick={() => checkBookings(res.id)}>
                                         <span>Supprimer</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem>
                                         <span>Voir le détail</span>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={()=>{Disable(res)}}>
+                                    <DropdownMenuItem onClick={() => { Disable(res) }}>
                                         <span>Rendre indisponible</span>
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -213,6 +247,37 @@ export default function TableList() {
                         </div>
                         <DialogFooter>
                             <Button type="submit" onClick={HandleSubmit}>Créer</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </div>
+
+            <div className="mb-6">
+                <Dialog open={visible} onOpenChange={setVisible}>
+                    <DialogContent className="bg-[#ebebeb]">
+                        <DialogHeader>
+                            <DialogTitle>Confirmer la suppression</DialogTitle>
+                        </DialogHeader>
+                        <p>
+                            Voulez-vous vraiment supprimer cette table ?<br />
+                            Les réservations suivantes seront impactées :
+                        </p>
+                        {
+                            bookings != null && bookings.length > 0
+                            ?
+                            (
+                                <>
+                                {bookings.map((booking) => (<p className='text-center'>{booking.person.first_name} {booking.person.last_name}</p>))}
+                                </>
+                            )
+                            :
+                            (<p className='text-center font-thin'>Aucune réservation impactée</p>)
+                        }
+                        <DialogFooter>
+                            <Button onClick={Delete}>Confirmer</Button>
+                            <Button variant="outline" onClick={() => setVisible(false)}>
+                                Annuler
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

@@ -5,9 +5,13 @@ import { useState, ChangeEvent, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { send } from "process";
 
 type UserType = {
     id: number;
+    mail: string;
+    last_name: string;
+    first_name: string;
     seats_remaining: number;
     role: string;
 };
@@ -85,6 +89,29 @@ function TableList({ user, updateUser }: TableListProps) {
         }
     };
 
+
+    const sendMail = async (table: TableData, user: UserType) => {
+        let mail = {
+            name: user.first_name + " " + user.last_name,
+            mail: user.mail,
+            text: `Vous avez réservé ${user.seats_remaining} à la table ${table.number} : ${table.name}`
+        }
+
+        console.log(mail);
+
+        try {
+            await fetch("http://localhost:3001/booking/mail", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(mail)
+            })
+        } catch (error) {
+            
+        }
+    }
+
     const handleBook = async () => {
         if(userProps.seats_remaining > 0){
             if (selectedTable === null) return;
@@ -103,6 +130,9 @@ function TableList({ user, updateUser }: TableListProps) {
                     body: JSON.stringify(body),
                 });
                 if (res.ok) {
+
+                    sendMail(selectedTable, userProps);
+
                     const updatedUser = { 
                         ...userProps, 
                         seats_remaining: 0 

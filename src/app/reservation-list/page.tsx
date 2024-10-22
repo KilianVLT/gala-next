@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuContent } from '@/components/ui/dropdown-menu';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import TableList from "@/components/tableList"
 
 
 import Image from "next/image";
@@ -29,7 +30,9 @@ export default function ReservationList() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [reservationCopy, setReservationCopy] = useState<Reservation[]>([]);
   const [visible, setVisible] = useState(false);
+  const [modificationVisible, setModificationVisible] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+
 
 
 
@@ -96,7 +99,13 @@ export default function ReservationList() {
   const selectReservation = (res: Reservation) => {
     setSelectedReservation(res);
     setVisible(true);
-};
+  };
+
+  const selectReservationModification = (res: Reservation) => {
+
+    setSelectedReservation(res);
+    setModificationVisible(true);
+  };
 
   return (
     <div className="min-h-screen bg-[#ebebeb] dark:bg-hsl(230,50%,5%) p-8">
@@ -159,7 +168,7 @@ export default function ReservationList() {
                       <DropdownMenuItem onClick={() => selectReservation(res)}>
                         <span>Supprimer</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={()=> selectReservationModification(res)}>
                         <span>Modifier</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -171,6 +180,20 @@ export default function ReservationList() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={modificationVisible} onOpenChange={setModificationVisible}>
+        <DialogContent className="bg-[#ebebeb]">
+          <DialogHeader>
+            <DialogTitle>Modifier la réservation</DialogTitle>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={Delete}>Enregistrer</Button>
+            <Button variant="outline" onClick={() => setModificationVisible(false)}>
+              Annuler
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={visible} onOpenChange={setVisible}>
         <DialogContent className="bg-[#ebebeb]">

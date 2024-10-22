@@ -9,6 +9,9 @@ import Link from "next/link";
 
 type User = {
   id: number;
+  first_name: string;
+  last_name: string;
+  mail: string;
   seats_remaining: number;
   role: string;
 };
@@ -93,6 +96,9 @@ export default function Home() {
           id: data.id,
           seats_remaining: data.seats_remaining,
           role: data.role,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          mail: data.mail
         };
 
         if (data && data.seats_remaining <= 0) {
