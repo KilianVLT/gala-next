@@ -4,8 +4,8 @@ import { Input } from "@/components/ui/input"; // Shadcn UI component
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; // Shadcn Table
 import { DropdownMenu, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuContent } from '@/components/ui/dropdown-menu';
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import TableList from "@/components/tableList"
 
 
 import Image from "next/image";
@@ -78,8 +78,8 @@ export default function ReservationList() {
 
   const Delete = async () => {
     console.log(selectedReservation);
-    
-    if(selectedReservation){
+
+    if (selectedReservation) {
       try {
         await fetch(`http://localhost:3001/booking/delete/${selectedReservation.person.id}`, {
           method: 'GET',
@@ -93,7 +93,7 @@ export default function ReservationList() {
         console.error('Error deleting table:', err);
       }
     }
-    
+
   };
 
   const selectReservation = (res: Reservation) => {
@@ -168,7 +168,7 @@ export default function ReservationList() {
                       <DropdownMenuItem onClick={() => selectReservation(res)}>
                         <span>Supprimer</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={()=> selectReservationModification(res)}>
+                      <DropdownMenuItem onClick={() => selectReservationModification(res)}>
                         <span>Modifier</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -186,6 +186,23 @@ export default function ReservationList() {
           <DialogHeader>
             <DialogTitle>Modifier la réservation</DialogTitle>
           </DialogHeader>
+          <div>
+            <Select>
+              <SelectTrigger className="w-[380px]">
+                <SelectValue placeholder="Select a fruit" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Table</SelectLabel>
+                  <SelectItem value="apple">Apple</SelectItem>
+                  <SelectItem value="banana">Banana</SelectItem>
+                  <SelectItem value="blueberry">Blueberry</SelectItem>
+                  <SelectItem value="grapes">Grapes</SelectItem>
+                  <SelectItem value="pineapple">Pineapple</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
           <DialogFooter>
             <Button onClick={Delete}>Enregistrer</Button>
             <Button variant="outline" onClick={() => setModificationVisible(false)}>

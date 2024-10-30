@@ -200,9 +200,15 @@ export default function TableList() {
                                     <DropdownMenuItem>
                                         <span>Voir le détail</span>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => { Disable(res) }}>
-                                        <span>Rendre indisponible</span>
-                                    </DropdownMenuItem>
+                                    {
+                                        parseInt(res.totalSeatsBooked) < 10
+                                            ?
+                                            <DropdownMenuItem onClick={() => { Disable(res) }}>
+                                                <span>Rendre indisponible</span>
+                                            </DropdownMenuItem>
+                                            :
+                                            <></>
+                                    }
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </TableCell>
@@ -264,14 +270,14 @@ export default function TableList() {
                         </p>
                         {
                             bookings != null && bookings.length > 0
-                            ?
-                            (
-                                <>
-                                {bookings.map((booking) => (<p className='text-center'>{booking.person.first_name} {booking.person.last_name}</p>))}
-                                </>
-                            )
-                            :
-                            (<p className='text-center font-thin'>Aucune réservation impactée</p>)
+                                ?
+                                (
+                                    <>
+                                        {bookings.map((booking) => (<p className='text-center'>{booking.person.first_name} {booking.person.last_name}</p>))}
+                                    </>
+                                )
+                                :
+                                (<p className='text-center font-thin'>Aucune réservation impactée</p>)
                         }
                         <DialogFooter>
                             <Button onClick={Delete}>Confirmer</Button>

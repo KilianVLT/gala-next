@@ -94,7 +94,7 @@ function TableList({ user, updateUser }: TableListProps) {
         let mail = {
             name: user.first_name + " " + user.last_name,
             mail: user.mail,
-            text: `Vous avez réservé ${user.seats_remaining} à la table ${table.number} : ${table.name}`
+            text: `Vous avez réservé ${user.seats_remaining} place à la table numéro ${table.number} : ${table.name}`
         }
 
         console.log(mail);
