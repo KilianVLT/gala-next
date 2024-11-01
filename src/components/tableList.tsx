@@ -5,7 +5,6 @@ import { useState, ChangeEvent, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { send } from "process";
 
 type UserType = {
     id: number;
@@ -43,7 +42,7 @@ function TableList({ user, updateUser }: TableListProps) {
         // Fetch tables when component mounts
         const fetchTables = async () => {
             try {
-                const data = await fetch("http://localhost:3001/table/load", {
+                await fetch("http://localhost:3001/table/load", {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
@@ -91,13 +90,11 @@ function TableList({ user, updateUser }: TableListProps) {
 
 
     const sendMail = async (table: TableData, user: UserType) => {
-        let mail = {
+        const mail = {
             name: user.first_name + " " + user.last_name,
             mail: user.mail,
             text: `Vous avez réservé ${user.seats_remaining} place à la table numéro ${table.number} : ${table.name}`
         }
-
-        console.log(mail);
 
         try {
             await fetch("http://localhost:3001/booking/mail", {
@@ -108,7 +105,7 @@ function TableList({ user, updateUser }: TableListProps) {
                 body: JSON.stringify(mail)
             })
         } catch (error) {
-            
+            console.error("Problème lors de l'envoi du mail");
         }
     }
 

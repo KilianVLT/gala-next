@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 //import PopUpAddTable from '@/components/PopUpAddTable';
 import Image from 'next/image';
-import { TableCellsMerge } from 'lucide-react';
 
 type TableType = {
     id: string;
@@ -35,7 +34,6 @@ type BookingType = {
 
 export default function TableList() {
     const [tablesCopy, setTablesCopy] = useState<TableType[]>([]);
-    const [addTable, setShowAddTable] = useState(false);
     const [table, setTable] = useState<TableFormType>({ number: "", name: "" });
     const [bookings, setBookings] = useState<BookingType[] | null>(null);
     const [visible, setVisible] = useState<boolean>(false);
@@ -109,7 +107,7 @@ export default function TableList() {
     const Disable = async (table: TableType) => {
         if (sessionStorage.getItem("user") && JSON.parse(sessionStorage.getItem("user") as string).id) {
             try {
-                let body = {
+                const body = {
                     person_id: JSON.parse(sessionStorage.getItem("user") as string).id,
                     table_id: table.id
                 }
@@ -122,7 +120,7 @@ export default function TableList() {
                 })
                     .then(res => res.json())
                     .then(() => {
-                        let tables = tablesCopy.map((res) => {
+                        const tables = tablesCopy.map((res) => {
                             if (res.id == table.id) {
                                 res.totalSeatsBooked = "10"
                             }
@@ -140,7 +138,7 @@ export default function TableList() {
 
     const HandleSubmit = async () => {
 
-        let res = await fetch("http://localhost:3001/table/new", {
+        await fetch("http://localhost:3001/table/new", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -152,7 +150,6 @@ export default function TableList() {
         })
             .then((res) => res.json())
             .then((res) => {
-                console.log(res);
                 addNewTable(res);
                 setTable({ number: "", name: "" });
             })
@@ -273,7 +270,7 @@ export default function TableList() {
                                 ?
                                 (
                                     <>
-                                        {bookings.map((booking) => (<p className='text-center'>{booking.person.first_name} {booking.person.last_name}</p>))}
+                                        {bookings.map((booking) => (<p key={booking.id} className='text-center'>{booking.person.first_name} {booking.person.last_name}</p>))}
                                     </>
                                 )
                                 :

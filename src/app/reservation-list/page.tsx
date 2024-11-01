@@ -26,15 +26,23 @@ type Reservation = {
   seats_booked: number;
 };
 
+type TableType = {
+  id: number;
+  totalSeatsBooked: number;
+  number: string;
+  name: string;
+  seats_number: number;
+};
+
 export default function ReservationList() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [reservationCopy, setReservationCopy] = useState<Reservation[]>([]);
   const [visible, setVisible] = useState(false);
   const [modificationVisible, setModificationVisible] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
-
-
-
+  const [availableTable, setAvailableTable] = useState<TableType[]>([]);
+  const [availableTableFiltered, setAvailableTableFiltered] = useState<TableType[]>([]);
+  const [selectedTable, setSelectedTable] = useState<TableType | null>(null);
 
   useEffect(() => {
     const fetchReservations = async () => {
@@ -53,7 +61,23 @@ export default function ReservationList() {
       }
     };
 
+    const fetchTables = async () => {
+      try {
+        const res = await fetch("http://localhost:3001/table/load", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+        const data = await res.json();
+        setAvailableTable(JSON.parse(data));
+      } catch (error) {
+        console.error("Erreur lors du chargement des tables :", error);
+      }
+    };
+
     fetchReservations();
+    fetchTables();
   }, []);
 
   const Filter = (e: ChangeEvent<HTMLInputElement>) => {
@@ -77,7 +101,6 @@ export default function ReservationList() {
   };
 
   const Delete = async () => {
-    console.log(selectedReservation);
 
     if (selectedReservation) {
       try {
@@ -96,13 +119,46 @@ export default function ReservationList() {
 
   };
 
+  const Update = async () => {
+    console.log(selectedTable);
+
+    if (selectedReservation && selectedTable) {
+      try {
+        await fetch(`http://localhost:3001/booking/update/${selectedReservation.id}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ table_id: selectedTable.id })
+        });
+        const reservation = selectedReservation;
+        reservation.table = { id: selectedTable.id, name: selectedTable.name, number: parseInt(selectedTable.number) };
+        setReservationCopy(reservationCopy.map((res) => {
+          if (res.id == reservation.id) {
+            return reservation
+          }
+          return res;
+        }));
+        setModificationVisible(false);
+      } catch (err) {
+        console.error('Error deleting table:', err);
+      }
+    }
+
+  };
+
+  const handleChange = (value: string) => {
+    const table = JSON.parse(value)
+    setSelectedTable(table);
+  };
+
   const selectReservation = (res: Reservation) => {
     setSelectedReservation(res);
     setVisible(true);
   };
 
   const selectReservationModification = (res: Reservation) => {
-
+    setAvailableTableFiltered(availableTable.filter((table) => table.seats_number - table.totalSeatsBooked >= res.seats_booked && table.id != res.table.id));
     setSelectedReservation(res);
     setModificationVisible(true);
   };
@@ -187,24 +243,26 @@ export default function ReservationList() {
             <DialogTitle>Modifier la réservation</DialogTitle>
           </DialogHeader>
           <div>
-            <Select>
-              <SelectTrigger className="w-[380px]">
-                <SelectValue placeholder="Select a fruit" />
+            <Select onValueChange={handleChange}>
+              <SelectTrigger className="w-[380px]" >
+                <SelectValue placeholder="Selectionnez une table">
+                  {selectedTable?.number + " - " + selectedTable?.name || selectReservation.name}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Table</SelectLabel>
-                  <SelectItem value="apple">Apple</SelectItem>
-                  <SelectItem value="banana">Banana</SelectItem>
-                  <SelectItem value="blueberry">Blueberry</SelectItem>
-                  <SelectItem value="grapes">Grapes</SelectItem>
-                  <SelectItem value="pineapple">Pineapple</SelectItem>
+                  {
+                    availableTableFiltered.map(table => (
+                      <SelectItem key={table.id} value={JSON.stringify(table)}>{table.number + " - " + table.name}</SelectItem>
+                    ))
+                  }
                 </SelectGroup>
               </SelectContent>
             </Select>
           </div>
           <DialogFooter>
-            <Button onClick={Delete}>Enregistrer</Button>
+            <Button onClick={Update}>Enregistrer</Button>
             <Button variant="outline" onClick={() => setModificationVisible(false)}>
               Annuler
             </Button>
