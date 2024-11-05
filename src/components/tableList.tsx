@@ -26,9 +26,10 @@ type TableData = {
 type TableListProps = {
     user: UserType;
     updateUser: Function;
+    updateBooking: Function;
 };
 
-function TableList({ user, updateUser }: TableListProps) {
+function TableList({ user, updateUser, updateBooking }: TableListProps) {
     const [userProps, setUserProps] = useState(user);
     const [tables, setTables] = useState<TableData[]>([]);
     const [filteredTables, setFilteredTables] = useState<TableData[]>([]);
@@ -36,7 +37,6 @@ function TableList({ user, updateUser }: TableListProps) {
     const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
 
     console.log(user);
-    
 
     useEffect(() => {
         // Fetch tables when component mounts
@@ -46,6 +46,7 @@ function TableList({ user, updateUser }: TableListProps) {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
+                        "authorization": "Bearer " + sessionStorage.getItem("token")
                     },
                 })
                     .then((res) => res.json())
@@ -93,14 +94,15 @@ function TableList({ user, updateUser }: TableListProps) {
         const mail = {
             name: user.first_name + " " + user.last_name,
             mail: user.mail,
-            text: `Vous avez réservé ${user.seats_remaining} place à la table numéro ${table.number} : ${table.name}`
+            text: `Vous avez demandé ${user.seats_remaining} place(s) à la table numéro ${table.number} : ${table.name}`
         }
 
         try {
             await fetch("http://localhost:3001/booking/mail", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "authorization": "Bearer " + sessionStorage.getItem("token")
                 },
                 body: JSON.stringify(mail)
             })
@@ -110,19 +112,20 @@ function TableList({ user, updateUser }: TableListProps) {
     }
 
     const handleBook = async () => {
-        if(userProps.seats_remaining > 0){
+        if (userProps.seats_remaining > 0) {
             if (selectedTable === null) return;
 
             const body = {
                 table_id: selectedTable.id,
                 person_id: userProps.id,
             };
-    
+
             try {
                 const res = await fetch("http://localhost:3001/booking/new", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
+                        "authorization": "Bearer " + sessionStorage.getItem("token")
                     },
                     body: JSON.stringify(body),
                 });
@@ -130,17 +133,19 @@ function TableList({ user, updateUser }: TableListProps) {
 
                     sendMail(selectedTable, userProps);
 
-                    const updatedUser = { 
-                        ...userProps, 
-                        seats_remaining: 0 
+                    const updatedUser = {
+                        ...userProps,
+                        seats_remaining: 0
                     };
-    
+
                     // Mettre à jour l'utilisateur dans l'enfant
                     setUserProps(updatedUser);
-    
+
                     // Mettre à jour l'utilisateur dans le parent via updateUser
                     updateUser(updatedUser);
-                    
+
+                    updateBooking(body);
+
                     sessionStorage.setItem("user", JSON.stringify(updatedUser));
                     setVisible(false)
                 }
@@ -156,9 +161,12 @@ function TableList({ user, updateUser }: TableListProps) {
     };
 
     const TableScrollArea = () => (
-        <ScrollArea className="h-72 w-96 rounded-md border">
+        <ScrollArea className="h-72 w-96 rounded-md">
             <div className="p-4">
-                <h2 className="mb-4 text-sm font-semibold leading-none">Sélectionnez votre table</h2>
+                <div className="flex justify-between">
+                    <h2 className="mb-4 text-sm font-semibold leading-none">Sélectionnez votre table</h2>
+                    <h2 className="mb-4 text-sm font-semibold leading-none">Nombre de place</h2>
+                </div>
                 {filteredTables.length > 0 ?
 
                     filteredTables.map((table) => (
@@ -187,18 +195,17 @@ function TableList({ user, updateUser }: TableListProps) {
     return (
 
         <div>
-            <p className="mb-4 text-lg">
-                Nombre de place à réserver : {userProps.seats_remaining}
-            </p>
             <form className="space-y-4">
-                <div className="flex space-x-4">
+                <div className="flex space-x-4 mt-8">
                     <Input
                         type="text"
                         placeholder="Chercher une Table"
                         onChange={handleFilter}
                     />
                 </div>
-
+                <p className="mb-4 text-lg flex justify-center">
+                    Nombre de place à réserver : {userProps.seats_remaining}
+                </p>
                 <TableScrollArea />
             </form>
 

@@ -1,11 +1,15 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod"
 import { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import { useForm } from "react-hook-form"
 import TableList from "@/components/tableList"
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { z } from "zod"
 import Image from "next/image";
 import Link from "next/link";
+import { Form, FormLabel, FormMessage, FormControl, FormField, FormItem } from "@/components/ui/form";
 
 type User = {
   id: number;
@@ -21,7 +25,7 @@ type Logs = {
   pswd: string;
 };
 
-type BookingType = {
+interface BookingType {
   id: number;
   person_id: number;
   seats_booked: number;
@@ -32,15 +36,145 @@ type BookingType = {
   table_id: number;
 }
 
+type LowBookingType = {
+  table_id: Number;
+  person_id: Number;
+}
+
+type Errors = {
+  id?: string;
+};
+
+type InputFormProps = {
+  errors: Errors;
+  setErrors: Function;
+}
+
+
+
+
+export function InputForm({errors, setErrors}: InputFormProps) {
+
+  const FormSchema = z.object({
+    // username: z.string()
+    //   .optional()
+    //   .refine((val) => val === "Kilian", { message: "Ce n'est pas Kilian" }),
+    id: z.string(),
+    pswd: z.string()
+  })
+
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema)
+  })
+
+  const onSubmit = async (logs: z.infer<typeof FormSchema>) => {
+    console.log(logs);
+
+    try {
+      const res = await fetch("http://localhost:3001/person/log-in", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(logs),
+      });
+
+      const data = await res.json();
+      console.log(data);
+
+      if(data.error){
+        setErrors(() => ({ id: data.error }));
+      }
+      
+      if (data.token) {
+        sessionStorage.setItem("token", data.token);
+      }
+
+      if (Object.keys(data).length > 0) {
+        console.log(data);
+
+        const newUser = {
+          id: data.id,
+          seats_remaining: data.seats_remaining,
+          role: data.role,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          mail: data.mail
+        };
+
+      
+      }
+    } catch (err) {
+      console.error("error:", err);
+    }
+  }
+
+  return (
+    <Form {...form} >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
+
+        <FormField
+          control={form.control}
+          name="id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Identifiant</FormLabel>
+              <FormControl>
+                <Input
+                  type="text"
+                  placeholder="Entrez votre identifiant"
+                  {...field}
+                  onChange={(e) => setErrors({ id: "" })}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+
+        <FormField
+          control={form.control}
+          name="pswd"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Mot de passe</FormLabel>
+              <FormControl>
+                <Input
+                  type="password"
+                  placeholder="Entrez votre identifiant"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Button type="submit" className="w-full">
+          Se connecter
+        </Button>
+        
+      </form>
+    </Form >
+  )
+}
+
 export default function Home() {
+  const [errors, setErrors] = useState<Errors>({id:""});
+
   const [showMenu, setShowMenu] = useState<boolean>(false);
   const [logs, setLogs] = useState<Logs>({ id: "", pswd: "" });
   const [user, setUser] = useState<User | null>(null);
-  const [booking, setBooking] = useState<BookingType | null>(null);
+  const [booking, setBooking] = useState<BookingType | LowBookingType | null>(null);
 
   const updateUser = (newValue: User) => {
     setUser(newValue);
   };
+
+  const updateBooking = (newValue: BookingType) => {
+    setBooking(newValue);
+  }
 
   useEffect(() => {
     // Accéder à sessionStorage uniquement côté client
@@ -72,7 +206,6 @@ export default function Home() {
   };
 
   const HandleSubmit = async (event: FormEvent) => {
-    event.preventDefault();
 
     try {
       const res = await fetch("http://localhost:3001/person/log-in", {
@@ -101,23 +234,24 @@ export default function Home() {
           mail: data.mail
         };
 
-        if (data && data.seats_remaining <= 0) {
-          fetch("http://localhost:3001/booking/by-person/" + data.id, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json"
-            }
-          })
-            .then(res => res.json())
-            .then((res: BookingType[]) => {
-              setBooking(res[0]);
+        if (data.id) {
+          if (data.seats_remaining <= 0) {
+            fetch("http://localhost:3001/booking/by-person/" + data.id, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                "authorization": "Bearer " + sessionStorage.getItem("token")
+              }
             })
+              .then(res => res.json())
+              .then((res: BookingType[]) => {
+                setBooking(res[0]);
+              })
+          }
+          sessionStorage.setItem("user", JSON.stringify(newUser));
+          setUser(newUser);
+          setShowMenu(true);
         }
-
-        sessionStorage.setItem("user", JSON.stringify(newUser));
-        setUser(newUser);
-        setShowMenu(true);
-        
       }
     } catch (err) {
       console.error("error:", err);
@@ -125,21 +259,24 @@ export default function Home() {
   };
 
   function Recap() {
-    if (booking) {
-      return (<p className="text-center">Vous avez réservé <b>{booking.seats_booked} place(s)</b>  pour la table numéro <b>{booking.table.number} : {booking.table.name}</b></p>)
+    if (booking && booking.hasOwnProperty("id")) {
+      const b = booking as BookingType;
+      return (<p className="text-center">Vous avez réservé <b>{b.seats_booked} place(s)</b>  pour la table numéro <b>{b.table.number} : {b.table.name}</b></p>)
     }
-    return (<></>)
+    else if (booking && booking.hasOwnProperty("table_id")) {
+      return (<p className="text-center">Un mail vous a été envoyé sur votre adresse mail de facturation</p>)
+    }
   }
 
   return (
     <div className="w-full h-full lg:grid lg:min-h-screen lg:grid-cols-2">
-      <div id="home-img" className="flex justify-center items-center h-full w-full dark:brightness-[0.2] dark:grayscale bg-home-img">
+      <div id="home-img" className="flex justify-center items-center dark:brightness-[0.2] dark:grayscale bg-home-img">
         <Image
           src="/gala.png"
           alt="Image"
-          width="500"
-          height="500"
-          className=""
+          width="400"
+          height="400"
+          className="w-5/12 md:w-1/2"
         />
       </div>
       <div className="flex-col">
@@ -147,7 +284,7 @@ export default function Home() {
           <div className="justify-end">
             <Button
               variant="outline"
-              className="absolute right-10 top-5"
+              className="absolute right-2 top-2 text-sm text-white border-b-2 border-white md:hover:bg-home-img md:right-10 md:top-5 md:text-foreground md:border-2 md:border-foreground"
               onClick={LogOut}
             >
               Déconnexion
@@ -155,17 +292,27 @@ export default function Home() {
           </div>
         ) : null}
         <div className="h-full flex items-center justify-center">
-          <div className="m-auto grid w-[350px] gap-6">
+          <div className="grid w-[400px] mx-4">
             <div className="grid gap-2 text-center">
-              <h1 className="text-3xl font-bold">
-                {showMenu ? "Bienvenue" : "Connexion"}
+              <h1 className="text-3xl font-bold mt-11">
+                {showMenu ? user?.role === "USER" && user.seats_remaining <= 0 ? "Merci" : "Bienvenue" : "Connexion"}
               </h1>
-              <p className="text-balance text-muted-foreground">
-                Faites votre demande de réservation
-              </p>
+              {
+                user?.role === "USER" && user.seats_remaining <= 0 ?
+                  <p className="text-balance text-muted-foreground">
+                    Votre demande a bien été prise en compte
+                  </p>
+                  :
+                  user?.role === "USER" && user.seats_remaining > 0 || !showMenu ?
+                    <p className="text-balance text-muted-foreground">
+                      Faites votre demande de reservation
+                    </p>
+                    :
+                    <></>
+              }
             </div>
             {showMenu && user?.role === "ADMIN" ? (
-              <div className="grid gap-4">
+              <div className="grid gap-4 mt-7">
                 <Link
                   href="/reservation-list"
                   className="m-auto inline-block text-sm underline"
@@ -182,12 +329,14 @@ export default function Home() {
             ) : showMenu && user?.role === "USER" ? (
               user.seats_remaining > 0 ?
                 (
-                  <TableList user={user} updateUser={updateUser}/>
+                  <TableList user={user} updateUser={updateUser} updateBooking={updateBooking} />
                 ) : (
                   <Recap />
                 )
             ) : (
+
               <div className="grid gap-4">
+                {/* <InputForm errors={errors} setErrors={setErrors}/> */}
                 <div className="grid gap-2">
                   <Label htmlFor="id">Identifiant</Label>
                   <Input

@@ -48,6 +48,7 @@ export default function TableList() {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
+                        "authorization": "Bearer " + sessionStorage.getItem("token")
                     },
                 });
                 const tables = await res.json();
@@ -76,7 +77,8 @@ export default function TableList() {
             await fetch(`http://localhost:3001/booking/by-table/${id}`, {
                 method: "GET",
                 headers: {
-                    "Content-Type": 'application/json'
+                    "Content-Type": 'application/json',
+                    "authorization": "Bearer " + sessionStorage.getItem("token")
                 }
             })
                 .then(res => res.json())
@@ -96,9 +98,12 @@ export default function TableList() {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    "authorization": "Bearer " + sessionStorage.getItem("token")
+
                 },
             });
             setTablesCopy(tablesCopy.filter((table) => table.id !== idTable));
+            setVisible(false)
         } catch (err) {
             console.error('Error deleting table:', err);
         }
@@ -115,6 +120,7 @@ export default function TableList() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        "authorization": "Bearer " + sessionStorage.getItem("token")
                     },
                     body: JSON.stringify(body)
                 })
@@ -141,7 +147,8 @@ export default function TableList() {
         await fetch("http://localhost:3001/table/new", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "authorization": "Bearer " + sessionStorage.getItem("token")
             },
             body: JSON.stringify({
                 number: parseInt(table.number),
@@ -173,19 +180,19 @@ export default function TableList() {
         <Table>
             <TableHeader className="bg-[#ebebeb] dark:bg-hsl(230,50%,5%)">
                 <TableRow>
-                    <TableHead className="w-[100px] text-hsl(230,50%,5%) dark:text-[#ebebeb]">Numéro</TableHead>
-                    <TableHead className="text-hsl(230,50%,5%) dark:text-[#ebebeb]">Nom</TableHead>
-                    <TableHead className="text-hsl(230,50%,5%) dark:text-[#ebebeb]">Places réservées</TableHead>
-                    <TableHead className="text-right text-hsl(230,50%,5%) dark:text-[#ebebeb]">Action</TableHead>
+                    <TableHead className="w-[100px] text-hsl(230,50%,5%) dark:text-[#ebebeb] text-center">Numéro</TableHead>
+                    <TableHead className="text-hsl(230,50%,5%) dark:text-[#ebebeb] text-center">Nom</TableHead>
+                    <TableHead className="text-hsl(230,50%,5%) dark:text-[#ebebeb] text-center">Places réservées</TableHead>
+                    <TableHead className="text-hsl(230,50%,5%) dark:text-[#ebebeb] text-center">Action</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {tablesCopy.map((res) => (
                     <TableRow key={res.id} className={parseInt(res.totalSeatsBooked) < 10 ? "hover:bg-gray-100 dark:hover:bg-hsl(230,50%,10%)" : "bg-gray-300 hover:bg-gray-300"}>
-                        <TableCell className="font-medium text-hsl(230,50%,5%) dark:text-[#ebebeb]">{res.number}</TableCell>
-                        <TableCell className="text-hsl(230,50%,5%) dark:text-[#ebebeb]">{res.name}</TableCell>
-                        <TableCell className="text-hsl(230,50%,5%) dark:text-[#ebebeb]">{res.totalSeatsBooked}</TableCell>
-                        <TableCell className='flex justify-end'>
+                        <TableCell className="font-medium text-hsl(230,50%,5%) dark:text-[#ebebeb] text-center">{res.number}</TableCell>
+                        <TableCell className="text-hsl(230,50%,5%) dark:text-[#ebebeb] text-center">{res.name}</TableCell>
+                        <TableCell className="text-hsl(230,50%,5%) dark:text-[#ebebeb] text-center">{res.totalSeatsBooked}</TableCell>
+                        <TableCell className='flex justify-center text-center'>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <span className="material-symbols-outlined text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">more_horiz</span>
@@ -193,9 +200,6 @@ export default function TableList() {
                                 <DropdownMenuContent className="w-56">
                                     <DropdownMenuItem onClick={() => checkBookings(res.id)}>
                                         <span>Supprimer</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                        <span>Voir le détail</span>
                                     </DropdownMenuItem>
                                     {
                                         parseInt(res.totalSeatsBooked) < 10
@@ -218,8 +222,12 @@ export default function TableList() {
     return (
         <div className="min-h-screen bg-[#ebebeb] dark:bg-hsl(230,50%,5%) p-8">
             <header className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">Gestion des Tables</h1>
-                <Image src="/gala.png" alt="logo" width={50} height={50} className="dark:brightness-[0.8] dark:grayscale" />
+                <div className='flex' onClick={() => { history.back() }}>
+                    <span className="material-symbols-outlined">chevron_left</span>
+                    <p>Retour</p>
+                </div>
+                <h1 className="text-3xl font-bold text-center text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">Gestion des Tables</h1>
+                <Image src="/gala.png" alt="logo" width={80} height={80} className="dark:brightness-[0.8] dark:grayscale" />
             </header>
 
             <div className="mb-6">
@@ -239,13 +247,13 @@ export default function TableList() {
                                 <Label htmlFor="number" className="text-right">
                                     Numéro
                                 </Label>
-                                <Input id="number" name="number" placeholder="Numéro de la table" value={table.number} className="col-span-3" onChange={HandleChange} />
+                                <Input id="number" type='number' name="number" placeholder="Numéro de la table" value={table.number} className="col-span-3" onChange={HandleChange} required/>
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
                                 <Label htmlFor="name" className="text-right">
                                     Nom
                                 </Label>
-                                <Input id="name" name="name" placeholder="Nom de la table" value={table.name} className="col-span-3" onChange={HandleChange} />
+                                <Input id="name" name="name" placeholder="Nom de la table" value={table.name} className="col-span-3" onChange={HandleChange} required/>
                             </div>
                         </div>
                         <DialogFooter>

@@ -16,6 +16,7 @@ type Reservation = {
   person: {
     id: number;
     last_name: string;
+    first_name: string;
     role: string;
   };
   table: {
@@ -39,6 +40,7 @@ export default function ReservationList() {
   const [reservationCopy, setReservationCopy] = useState<Reservation[]>([]);
   const [visible, setVisible] = useState(false);
   const [modificationVisible, setModificationVisible] = useState(false);
+  const [recapVisible, setRecapVisible] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [availableTable, setAvailableTable] = useState<TableType[]>([]);
   const [availableTableFiltered, setAvailableTableFiltered] = useState<TableType[]>([]);
@@ -51,6 +53,7 @@ export default function ReservationList() {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
+            "authorization": "Bearer " + sessionStorage.getItem("token")
           },
         });
         const data = await res.json();
@@ -66,7 +69,8 @@ export default function ReservationList() {
         const res = await fetch("http://localhost:3001/table/load", {
           method: "GET",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "authorization": "Bearer " + sessionStorage.getItem("token")
           }
         });
         const data = await res.json();
@@ -100,6 +104,17 @@ export default function ReservationList() {
     }
   };
 
+  const sendFinalMail = async () => {
+    fetch("http://localhost:3001/booking/mail-recap", {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        "authorization": "Bearer " + sessionStorage.getItem("token")
+      }
+    })
+    setRecapVisible(false)
+  }
+
   const Delete = async () => {
 
     if (selectedReservation) {
@@ -108,6 +123,7 @@ export default function ReservationList() {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
+            "authorization": "Bearer " + sessionStorage.getItem("token")
           },
         });
         setReservationCopy(reservationCopy.filter((booking) => booking.person.id !== selectedReservation.person.id));
@@ -128,6 +144,7 @@ export default function ReservationList() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            "authorization": "Bearer " + sessionStorage.getItem("token")
           },
           body: JSON.stringify({ table_id: selectedTable.id })
         });
@@ -144,7 +161,6 @@ export default function ReservationList() {
         console.error('Error deleting table:', err);
       }
     }
-
   };
 
   const handleChange = (value: string) => {
@@ -166,7 +182,11 @@ export default function ReservationList() {
   return (
     <div className="min-h-screen bg-[#ebebeb] dark:bg-hsl(230,50%,5%) p-8">
       <header className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">
+        <div className='flex' onClick={() => { history.back() }}>
+          <span className="material-symbols-outlined">chevron_left</span>
+          <p>Retour</p>
+        </div>
+        <h1 className="text-3xl font-bold text-center text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">
           Gestion des Réservations
         </h1>
         <Image
@@ -178,8 +198,9 @@ export default function ReservationList() {
         />
       </header>
 
-      {/* Filter Inputs */}
-      <form id="reservation-filters" className="flex gap-4 mb-6">
+      <Button variant="destructive" className="flex" onClick={() => setRecapVisible(true)}>Valider la réservation</Button>
+
+      <form id="reservation-filters" className="flex gap-4 mb-6 mt-6">
         <Input
           type="text"
           name="family"
@@ -201,21 +222,21 @@ export default function ReservationList() {
         <Table className="min-w-full">
           <TableHeader className="bg-[#ebebeb] dark:bg-hsl(230,50%,5%)">
             <TableRow>
-              <TableHead className="text-left text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">Famille</TableHead>
-              <TableHead className="text-left text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">Table</TableHead>
-              <TableHead className="text-left text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">Places réservées</TableHead>
-              <TableHead className="text-left text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">Action</TableHead>
+              <TableHead className="text-center text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">Famille</TableHead>
+              <TableHead className="text-center text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">Table</TableHead>
+              <TableHead className="text-center text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">Places réservées</TableHead>
+              <TableHead className="text-center text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {reservationCopy.map((res) => (
               <TableRow key={res.id} className={res.seats_booked < 10 ? "hover:bg-gray-100 dark:hover:bg-hsl(230,50%,10%)" : "bg-gray-300 hover:bg-gray-300"}>
-                <TableCell className="text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">{res.person.role == "ADMIN" ? "ADMIN" : res.person.last_name}</TableCell>
-                <TableCell className="text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">
+                <TableCell className="text-hsl(230, 50%, 5%) dark:text-[#ebebeb] text-center ">{res.person.role == "ADMIN" ? "ADMIN" : res.person.first_name + " " + res.person.last_name}</TableCell>
+                <TableCell className="text-hsl(230, 50%, 5%) dark:text-[#ebebeb] text-center">
                   {res.table.number} - {res.table.name}
                 </TableCell>
-                <TableCell className="text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">{res.seats_booked}</TableCell>
-                <TableCell>
+                <TableCell className="text-hsl(230, 50%, 5%) dark:text-[#ebebeb] text-center">{res.seats_booked}</TableCell>
+                <TableCell className="justify-center text-center">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <span className="material-symbols-outlined text-hsl(230, 50%, 5%) dark:text-[#ebebeb]">more_horiz</span>
@@ -281,6 +302,23 @@ export default function ReservationList() {
           <DialogFooter>
             <Button onClick={Delete}>Confirmer</Button>
             <Button variant="outline" onClick={() => setVisible(false)}>
+              Annuler
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={recapVisible} onOpenChange={setRecapVisible}>
+        <DialogContent className="bg-[#ebebeb]">
+          <DialogHeader>
+            <DialogTitle>Valider les placements ?</DialogTitle>
+          </DialogHeader>
+          <p>
+            Attention, cela va envoyer un mail à tous ceux ayant réservé !
+          </p>
+          <DialogFooter>
+            <Button onClick={sendFinalMail}>Confirmer</Button>
+            <Button variant="outline" onClick={() => setRecapVisible(false)}>
               Annuler
             </Button>
           </DialogFooter>
