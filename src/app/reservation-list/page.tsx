@@ -49,7 +49,7 @@ export default function ReservationList() {
   useEffect(() => {
     const fetchReservations = async () => {
       try {
-        const res = await fetch("http://localhost:3001/booking/load", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/booking/load`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -66,7 +66,7 @@ export default function ReservationList() {
 
     const fetchTables = async () => {
       try {
-        const res = await fetch("http://localhost:3001/table/load", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/table/load`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -105,7 +105,7 @@ export default function ReservationList() {
   };
 
   const sendFinalMail = async () => {
-    fetch("http://localhost:3001/booking/mail-recap", {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/booking/mail-recap`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -119,7 +119,7 @@ export default function ReservationList() {
 
     if (selectedReservation) {
       try {
-        await fetch(`http://localhost:3001/booking/delete/${selectedReservation.person.id}`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}booking/delete/${selectedReservation.person.id}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ export default function ReservationList() {
 
     if (selectedReservation && selectedTable) {
       try {
-        await fetch(`http://localhost:3001/booking/update/${selectedReservation.id}`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/booking/update/${selectedReservation.id}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

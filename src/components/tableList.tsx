@@ -42,7 +42,7 @@ function TableList({ user, updateUser, updateBooking }: TableListProps) {
         // Fetch tables when component mounts
         const fetchTables = async () => {
             try {
-                await fetch("http://localhost:3001/table/load", {
+                await fetch(`${process.env.NEXT_PUBLIC_API_URL}/table/load`, {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
@@ -98,7 +98,7 @@ function TableList({ user, updateUser, updateBooking }: TableListProps) {
         }
 
         try {
-            await fetch("http://localhost:3001/booking/mail", {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/booking/mail`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -121,7 +121,7 @@ function TableList({ user, updateUser, updateBooking }: TableListProps) {
             };
 
             try {
-                const res = await fetch("http://localhost:3001/booking/new", {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/booking/new`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",

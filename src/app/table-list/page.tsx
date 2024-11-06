@@ -44,7 +44,7 @@ export default function TableList() {
     useEffect(() => {
         const fetchTables = async () => {
             try {
-                const res = await fetch('http://localhost:3001/table/load', {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/table/load`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -74,7 +74,7 @@ export default function TableList() {
     const checkBookings = async (id: string) => {
         setIdTable(id);
         try {
-            await fetch(`http://localhost:3001/booking/by-table/${id}`, {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/booking/by-table/${id}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": 'application/json',
@@ -94,7 +94,7 @@ export default function TableList() {
 
     const Delete = async () => {
         try {
-            await fetch(`http://localhost:3001/table/delete/${idTable}`, {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/table/delete/${idTable}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -116,7 +116,7 @@ export default function TableList() {
                     person_id: JSON.parse(sessionStorage.getItem("user") as string).id,
                     table_id: table.id
                 }
-                await fetch(`http://localhost:3001/booking/new/`, {
+                await fetch(`${process.env.NEXT_PUBLIC_API_URL}/booking/new/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -144,7 +144,7 @@ export default function TableList() {
 
     const HandleSubmit = async () => {
 
-        await fetch("http://localhost:3001/table/new", {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/table/new`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

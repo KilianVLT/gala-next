@@ -1,15 +1,10 @@
 "use client";
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useState, useEffect, ChangeEvent, FormEvent } from "react";
-import { useForm } from "react-hook-form"
+import { useState, useEffect, ChangeEvent } from "react";
 import TableList from "@/components/tableList"
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { z } from "zod"
+import { InputForm } from "@/components/inputForm";
 import Image from "next/image";
 import Link from "next/link";
-import { Form, FormLabel, FormMessage, FormControl, FormField, FormItem } from "@/components/ui/form";
 
 type User = {
   id: number;
@@ -45,126 +40,10 @@ type Errors = {
   id?: string;
 };
 
-type InputFormProps = {
-  errors: Errors;
-  setErrors: Function;
-}
-
-
-
-
-export function InputForm({errors, setErrors}: InputFormProps) {
-
-  const FormSchema = z.object({
-    // username: z.string()
-    //   .optional()
-    //   .refine((val) => val === "Kilian", { message: "Ce n'est pas Kilian" }),
-    id: z.string(),
-    pswd: z.string()
-  })
-
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema)
-  })
-
-  const onSubmit = async (logs: z.infer<typeof FormSchema>) => {
-    console.log(logs);
-
-    try {
-      const res = await fetch("http://localhost:3001/person/log-in", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(logs),
-      });
-
-      const data = await res.json();
-      console.log(data);
-
-      if(data.error){
-        setErrors(() => ({ id: data.error }));
-      }
-      
-      if (data.token) {
-        sessionStorage.setItem("token", data.token);
-      }
-
-      if (Object.keys(data).length > 0) {
-        console.log(data);
-
-        const newUser = {
-          id: data.id,
-          seats_remaining: data.seats_remaining,
-          role: data.role,
-          first_name: data.first_name,
-          last_name: data.last_name,
-          mail: data.mail
-        };
-
-      
-      }
-    } catch (err) {
-      console.error("error:", err);
-    }
-  }
-
-  return (
-    <Form {...form} >
-      <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
-
-        <FormField
-          control={form.control}
-          name="id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Identifiant</FormLabel>
-              <FormControl>
-                <Input
-                  type="text"
-                  placeholder="Entrez votre identifiant"
-                  {...field}
-                  onChange={(e) => setErrors({ id: "" })}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-
-        <FormField
-          control={form.control}
-          name="pswd"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Mot de passe</FormLabel>
-              <FormControl>
-                <Input
-                  type="password"
-                  placeholder="Entrez votre identifiant"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <Button type="submit" className="w-full">
-          Se connecter
-        </Button>
-        
-      </form>
-    </Form >
-  )
-}
-
 export default function Home() {
+  
   const [errors, setErrors] = useState<Errors>({id:""});
-
   const [showMenu, setShowMenu] = useState<boolean>(false);
-  const [logs, setLogs] = useState<Logs>({ id: "", pswd: "" });
   const [user, setUser] = useState<User | null>(null);
   const [booking, setBooking] = useState<BookingType | LowBookingType | null>(null);
 
@@ -189,72 +68,11 @@ export default function Home() {
 
   }, []);
 
-  const HandleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setLogs({
-      ...logs,
-      [name]: value,
-    });
-  };
-
   const LogOut = () => {
     if (typeof window !== "undefined") {
       sessionStorage.clear();
       setShowMenu(false);
       setUser(null);
-    }
-  };
-
-  const HandleSubmit = async (event: FormEvent) => {
-
-    try {
-      const res = await fetch("http://localhost:3001/person/log-in", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(logs),
-      });
-
-      const data = await res.json();
-
-      if (data.token) {
-        sessionStorage.setItem("token", data.token);
-      }
-
-      if (Object.keys(data).length > 0) {
-        console.log(data);
-
-        const newUser = {
-          id: data.id,
-          seats_remaining: data.seats_remaining,
-          role: data.role,
-          first_name: data.first_name,
-          last_name: data.last_name,
-          mail: data.mail
-        };
-
-        if (data.id) {
-          if (data.seats_remaining <= 0) {
-            fetch("http://localhost:3001/booking/by-person/" + data.id, {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-                "authorization": "Bearer " + sessionStorage.getItem("token")
-              }
-            })
-              .then(res => res.json())
-              .then((res: BookingType[]) => {
-                setBooking(res[0]);
-              })
-          }
-          sessionStorage.setItem("user", JSON.stringify(newUser));
-          setUser(newUser);
-          setShowMenu(true);
-        }
-      }
-    } catch (err) {
-      console.error("error:", err);
     }
   };
 
@@ -334,36 +152,8 @@ export default function Home() {
                   <Recap />
                 )
             ) : (
-
               <div className="grid gap-4">
-                {/* <InputForm errors={errors} setErrors={setErrors}/> */}
-                <div className="grid gap-2">
-                  <Label htmlFor="id">Identifiant</Label>
-                  <Input
-                    id="id"
-                    name="id"
-                    type="text"
-                    placeholder="Entrez votre identifiant"
-                    onChange={HandleChange}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <div className="flex items-center">
-                    <Label htmlFor="pswd">Mot de passe</Label>
-                  </div>
-                  <Input
-                    id="pswd"
-                    name="pswd"
-                    type="password"
-                    placeholder="Entrez votre mot de passe"
-                    onChange={HandleChange}
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" onClick={HandleSubmit}>
-                  Se connecter
-                </Button>
+                <InputForm errors={errors} setErrors={setErrors} setBooking={setBooking} setUser={setUser} setShowMenu={setShowMenu}/>
               </div>
             )}
           </div>
