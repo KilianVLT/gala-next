@@ -15,11 +15,6 @@ type User = {
   role: string;
 };
 
-type Logs = {
-  id: string;
-  pswd: string;
-};
-
 interface BookingType {
   id: number;
   person_id: number;
@@ -32,8 +27,8 @@ interface BookingType {
 }
 
 type LowBookingType = {
-  table_id: Number;
-  person_id: Number;
+  table_id: number;
+  person_id: number;
 }
 
 type Errors = {

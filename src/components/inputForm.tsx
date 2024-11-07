@@ -110,7 +110,7 @@ export function InputForm({ errors, setErrors, setBooking, setShowMenu, setUser 
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Identifiant</FormLabel>
-                            <FormControl className="invalid:border-red-500">
+                            <FormControl className={errors && errors.id != "" ? "border-red-500": ""}>
                                 <Input
                                     type="text"
                                     placeholder="Entrez votre identifiant"
@@ -129,7 +129,7 @@ export function InputForm({ errors, setErrors, setBooking, setShowMenu, setUser 
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Mot de passe</FormLabel>
-                            <FormControl>
+                            <FormControl className={errors && errors.id != "" ? "border-red-500": ""}>
                                 <Input
                                     type="password"
                                     placeholder="Entrez votre mot de passe"
