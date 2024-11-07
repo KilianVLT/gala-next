@@ -94,7 +94,14 @@ export default function Home() {
           alt="Image"
           width="400"
           height="400"
-          className="w-5/12 md:w-1/2"
+          className={"w-5/12 md:w-1/2" + {showMenu && user?.role === "USER" ?"md:hidden lg:hidden": ""}
+        />
+        <Image
+          src={showMenu && user?.role === "USER" ?"/table.png":"/gala.png"}
+          alt="Image"
+          width="400"
+          height="400"
+          className={"w-5/12 md:w-1/2" + {showMenu && user?.role === "USER" ?"hidden md:block lg:block": ""}
         />
       </div>
       <div className="flex-col">
