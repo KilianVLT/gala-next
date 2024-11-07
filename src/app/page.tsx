@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import TableList from "@/components/tableList"
 import { Button } from "@/components/ui/button";
 import { InputForm } from "@/components/inputForm";
@@ -36,9 +37,10 @@ type Errors = {
 };
 
 export default function Home() {
-  
-  const [errors, setErrors] = useState<Errors>({id:""});
+
+  const [errors, setErrors] = useState<Errors>({ id: "" });
   const [showMenu, setShowMenu] = useState<boolean>(false);
+  const [showTables, setShowTables] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
   const [booking, setBooking] = useState<BookingType | LowBookingType | null>(null);
 
@@ -89,14 +91,14 @@ export default function Home() {
           alt="Image"
           width="400"
           height="400"
-          className={"w-5/12 md:w-1/2" + {showMenu && user?.role === "USER" ?"md:hidden lg:hidden": ""}
+          className={"w-5/12 md:w-1/2" + showMenu && user?.role === "USER" ? "md:hidden lg:hidden" : ""}
         />
         <Image
-          src={showMenu && user?.role === "USER" ?"/table.png":"/gala.png"}
+          src="/table.png"
           alt="Image"
-          width="400"
-          height="400"
-          className={"w-5/12 md:w-1/2" + {showMenu && user?.role === "USER" ?"hidden md:block lg:block": ""}
+          width="450"
+          height="450"
+          className={"w-5/12 md:w-1/2" + showMenu && user?.role === "USER" ? "hidden md:block lg:block" : "hidden"}
         />
       </div>
       <div className="flex-col">
@@ -113,6 +115,21 @@ export default function Home() {
         ) : null}
         <div className="h-full flex items-center justify-center">
           <div className="grid w-[400px] mx-4">
+
+            {
+              showMenu && user?.role === "USER" && user.seats_remaining > 0?
+              <div className="justify-end">
+                <Button
+                  variant="secondary"
+                  className="md:hidden lg:hidden text-sm text-white border-b-2 border-white bg-input mt-4 flex ml-auto"
+                  onClick={() => setShowTables(true)}
+                >
+                  Voir les tables
+                </Button>
+              </div>:
+              <></>
+            }
+
             <div className="grid gap-2 text-center">
               <h1 className="text-3xl font-bold mt-11">
                 {showMenu ? user?.role === "USER" && user.seats_remaining <= 0 ? "Merci" : "Bienvenue" : "Connexion"}
@@ -155,12 +172,26 @@ export default function Home() {
                 )
             ) : (
               <div className="grid gap-4">
-                <InputForm errors={errors} setErrors={setErrors} setBooking={setBooking} setUser={setUser} setShowMenu={setShowMenu}/>
+                <InputForm errors={errors} setErrors={setErrors} setBooking={setBooking} setUser={setUser} setShowMenu={setShowMenu} />
               </div>
             )}
           </div>
         </div>
       </div>
+
+      <Dialog open={showTables} onOpenChange={setShowTables}>
+        <DialogContent className="bg-home-img w-5/6 h-3/5 text-white p-0">
+
+          <Image
+            src="/table.png"
+            alt="Image"
+            width="500"
+            height="500"
+            className={"w-auto flex mt-10"}
+          />
+
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
