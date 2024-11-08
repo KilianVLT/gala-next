@@ -41,7 +41,6 @@ export function InputForm({ errors, setErrors, setBooking, setShowMenu, setUser 
     })
 
     const onSubmit = async (logs: z.infer<typeof FormSchema>) => {
-        console.log(logs);
 
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/person/log-in`, {
@@ -53,11 +52,9 @@ export function InputForm({ errors, setErrors, setBooking, setShowMenu, setUser 
             });
 
             const data = await res.json();
-            console.log(data);
 
             if (data.error) {
                 setErrors(() => ({ id: data.error }));
-                console.log(data.error); 
             }
 
             if (data.token) {
@@ -65,7 +62,6 @@ export function InputForm({ errors, setErrors, setBooking, setShowMenu, setUser 
             }
 
             if (Object.keys(data).length > 0) {
-                console.log(data);
 
                 const newUser = {
                     id: data.id,

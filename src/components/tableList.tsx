@@ -36,7 +36,6 @@ function TableList({ user, updateUser, updateBooking }: TableListProps) {
     const [visible, setVisible] = useState(false); // For dialog visibility
     const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
 
-    console.log(user);
 
     useEffect(() => {
         // Fetch tables when component mounts
@@ -53,17 +52,12 @@ function TableList({ user, updateUser, updateBooking }: TableListProps) {
                     .then((data) => {
                         data = JSON.parse(data);
                         if (data.length > 0) {
-                            console.log(data.length);
                             data = data.filter(
                                 (table: TableData) =>
                                     table.seats_number - parseInt(table.totalSeatsBooked) >= userProps.seats_remaining
                             );
-                            console.log(data);
                             setTables(data);
                             setFilteredTables(data);
-                        }
-                        else {
-                            console.log("0");
                         }
                     })
 

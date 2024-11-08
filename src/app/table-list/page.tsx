@@ -62,8 +62,6 @@ export default function TableList() {
 
     const HandleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        console.log(name, value);
-        console.log(table);
 
         setTable({
             ...table,

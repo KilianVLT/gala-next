@@ -136,7 +136,6 @@ export default function ReservationList() {
   };
 
   const Update = async () => {
-    console.log(selectedTable);
 
     if (selectedReservation && selectedTable) {
       try {

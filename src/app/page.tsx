@@ -37,7 +37,7 @@ type Errors = {
 };
 
 export default function Home() {
-
+  
   const [errors, setErrors] = useState<Errors>({ id: "" });
   const [showMenu, setShowMenu] = useState<boolean>(false);
   const [showTables, setShowTables] = useState<boolean>(false);
