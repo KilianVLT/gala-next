@@ -119,7 +119,7 @@ export default function ReservationList() {
 
     if (selectedReservation) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}booking/delete/${selectedReservation.person.id}`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/booking/delete/${selectedReservation.person.id}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
