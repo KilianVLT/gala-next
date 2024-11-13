@@ -85,13 +85,13 @@ export default function Home() {
 
   return (
     <div className="w-full h-full lg:grid lg:min-h-screen lg:grid-cols-2">
-      <div id="home-img" className="flex justify-center items-center dark:brightness-[0.2] dark:grayscale bg-home-img">
+      <div id="home-img" className="flex m-auto md:m-0 lg:m-0 mt-2 justify-center items-center  w-1/4 lg:w-full dark:brightness-[0.2] dark:grayscale md:bg-home-img">
         <Image
           src="/gala.png"
           alt="Image"
           width="400"
           height="400"
-          className={"w-5/12 md:w-1/2" + showMenu && user?.role === "USER" ? "md:hidden lg:hidden" : ""}
+          className={showMenu && user?.role === "USER" ? "md:hidden lg:hidden" : ""}
         />
         <Image
           src="/table.png"
@@ -106,7 +106,7 @@ export default function Home() {
           <div className="justify-end">
             <Button
               variant="outline"
-              className="absolute right-2 top-2 text-sm text-white border-b-2 border-white md:hover:bg-home-img md:right-10 md:top-5 md:text-foreground md:border-2 md:border-foreground"
+              className="absolute right-2 top-2 text-sm text-white border-b-2 border-white bg-home-img md:bg-white md:right-10 md:top-5 md:text-foreground md:border-2 md:border-foreground"
               onClick={LogOut}
             >
               Déconnexion
@@ -118,10 +118,10 @@ export default function Home() {
 
             {
               showMenu && user?.role === "USER" && user.seats_remaining > 0?
-              <div className="justify-end">
+              <div className="">
                 <Button
                   variant="secondary"
-                  className="md:hidden lg:hidden text-sm text-white border-b-2 border-white bg-input mt-4 flex ml-auto"
+                  className="md:hidden lg:hidden text-sm text-white border-b-2 border-white bg-input flex m-auto mt-8"
                   onClick={() => setShowTables(true)}
                 >
                   Voir les tables
